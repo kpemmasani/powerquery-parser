@@ -142,6 +142,21 @@ export namespace Lexer {
         return updateRange(state, range, text);
     }
 
+    export function insertAt(
+        state: State,
+        position: RangePosition,
+        text: string,
+    ): ReturnType<typeof updateRange> {
+        return updateRange(
+            state,
+            {
+                start: position,
+                end: position,
+            },
+            text,
+        );
+    }
+
     export function updateRange(
         state: State,
         range: Range,
