@@ -13,13 +13,38 @@ function expectAbridgedTLexerLine(state: Lexer.State, expected: AbridgedTLexerLi
     expect(actual).deep.equal(expected);
 }
 
+function expectLexerInsertAtOk(
+    originalText: string,
+    insertText: string,
+    position: Lexer.RangePosition,
+): Lexer.State {
+    let insertState = expectLexSuccess(originalText);
+    const insertStateResult = Lexer.insertAt(insertState, position, insertText);
+    if (!(insertStateResult.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: insertStateResult.kind === ResultKind.Ok ${JSON.stringify(insertStateResult, null, 4)}`);
+    }
+    insertState = insertStateResult.value;
+
+    const updateState = expectLexerUpdateRangeOk(
+        originalText,
+        insertText,
+        {
+            start: position,
+            end: position,
+        },
+    );
+
+    expect(insertState).deep.equal(updateState);
+
+    return insertStateResult.value;
+}
+
 function expectLexerUpdateRangeOk(
     originalText: string,
     newText: string,
     range: Lexer.Range,
 ): Lexer.State {
-    let state = expectLexSuccess(originalText);
-
+    const state = expectLexSuccess(originalText);
     const stateResult = Lexer.updateRange(state, range, newText);
     if (!(stateResult.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, null, 4)}`);
@@ -65,46 +90,37 @@ function expectLexerUpdateLineAlphaBravoCharlie(
 
 describe(`Lexer.Incremental`, () => {
 
-    describe(`Lexer.updateRange`, () => {
+    describe("Lexer.insertAt", () => {
         it(`foobar -> Xfoobar`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                },
-                end: {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                },
-            };
-            const state: Lexer.State = expectLexerUpdateRangeOk(
+            const state: Lexer.State = expectLexerInsertAtOk(
                 `foobar`,
-                "X",
-                range
+                `X`,
+                {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                }
             );
             expect(state.lines.length).to.equal(1);
-            expect(state.lines[0].text).to.equal("Xfoobar");
+            expect(state.lines[0].text).to.equal(`Xfoobar`);
         });
 
         it(`foobar -> fooXbar`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: 0,
-                    lineCodeUnit: 3,
-                },
-                end: {
-                    lineNumber: 0,
-                    lineCodeUnit: 3,
-                },
-            };
-            const state: Lexer.State = expectLexerUpdateRangeOk(
+            const state: Lexer.State = expectLexerInsertAtOk(
                 `foobar`,
-                "X",
-                range
+                `X`,
+                {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                }
             );
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("fooXbar");
         });
+    });
+
+    describe(`Lexer.updateRange`, () => {
+
+
 
         it(`foobar -> Xoobar`, () => {
             const range: Lexer.Range = {
