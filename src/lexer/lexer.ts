@@ -464,6 +464,13 @@ export namespace Lexer {
         }
     }
 
+    function rangeLengthFrom(
+        state: State,
+        range: Range,
+    ): number {
+        
+    }
+
     function tokenizedLinesFrom(splitLines: ReadonlyArray<SplitLine>, previousLineModeEnd: LineMode) {
         const numLines: number = splitLines.length;
         const tokenizedLines: TLine[] = [];
